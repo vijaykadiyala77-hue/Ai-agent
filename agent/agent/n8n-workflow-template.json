@@ -1,0 +1,161 @@
+{
+  "meta": {
+    "templateId": "devagent-autonomous-coding-agent",
+    "instanceId": "devagent-instance"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "coding-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger-id",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        250,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an expert autonomous AI Coding Agent.\n\nYour responsibility is to help users develop software safely and efficiently.\n\nFor every coding request:\n1. Understand the requirement.\n2. Inspect the existing repository before making changes.\n3. Identify the relevant files.\n4. Create a short implementation plan.\n5. Implement the requested changes.\n6. Follow the existing project's architecture and coding style.\n7. Do not unnecessarily rewrite working code.\n8. Test the implementation whenever possible.\n9. Analyze and fix errors.\n10. Re-run tests after fixing errors.\n11. Report the changes clearly.\n12. Commit and push changes only when the user explicitly authorizes it.\n\nNever expose secrets.\nNever hardcode API keys, passwords or access tokens.\nNever delete repositories or important files without explicit confirmation.\nNever modify unrelated files.\nWhen a potentially destructive operation is requested, ask for confirmation first.\n\nReturn responses in a structured format:\n\nSTATUS: SUCCESS / PARTIAL / FAILED\n\nSUMMARY:\nBrief explanation of what was done.\n\nFILES:\nFiles created or modified.\n\nTESTING:\nTests or validation performed.\n\nERRORS:\nErrors found and how they were fixed.\n\nGITHUB:\nCommit/push information if applicable."
+        }
+      },
+      "id": "ai-agent-id",
+      "name": "AI Coding Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        500,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "gemini-1.5-pro",
+        "options": {}
+      },
+      "id": "gemini-model-id",
+      "name": "Google Gemini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        400,
+        420
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gemini-api-cred-id",
+          "name": "Google Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "memory-id",
+      "name": "Window Buffer Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.2,
+      "position": [
+        520,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "name": "github_actions",
+        "description": "Use this tool to interact with the GitHub repository. You can read, write/update, or list repository files. Argument must be a valid JSON string containing: {\"action\": \"read\"|\"write\"|\"list\", \"path\": \"relative/file/path\", \"content\": \"file content (only for write)\", \"commitMessage\": \"commit description (optional)\"}",
+        "jsCode": "const owner = \"vijaykadiyala77-hue\";\nconst repo = \"n8n-coding-agent\";\n\n// Token is fetched from n8n environment variable or hardcoded for development\nconst token = process.env.GITHUB_TOKEN || \"YOUR_GITHUB_TOKEN\";\n\nlet args;\ntry {\n  args = JSON.parse(query);\n} catch(e) {\n  return \"Error: Tool requires a JSON argument. E.g. {\\\"action\\\": \\\"read\\\", \\\"path\\\": \\\"filename\\\"}\";\n}\n\nconst headers = {\n  \"Authorization\": `token ${token}`,\n  \"Accept\": \"application/vnd.github.v3+json\",\n  \"User-Agent\": \"n8n-coding-agent\"\n};\n\nconst baseUrl = `https://api.github.com/repos/${owner}/${repo}/contents`;\n\nasync function githubRequest(url, method = \"GET\", body = null) {\n  const options = {\n    method,\n    headers,\n  };\n  if (body) {\n    options.headers[\"Content-Type\"] = \"application/json\";\n    options.body = JSON.stringify(body);\n  }\n  const res = await fetch(url, options);\n  if (!res.ok) {\n    const errText = await res.text();\n    throw new Error(`GitHub API Error (${res.status}): ${errText}`);\n  }\n  return await res.json();\n}\n\ntry {\n  if (args.action === \"read\") {\n    const url = `${baseUrl}/${args.path}`;\n    const data = await githubRequest(url, \"GET\");\n    if (data.type === \"file\") {\n      const content = Buffer.from(data.content, \"base64\").toString(\"utf-8\");\n      return content;\n    } else {\n      return `Error: ${args.path} is a directory. Use list action instead.`;\n    }\n  } \n  \n  else if (args.action === \"write\") {\n    const url = `${baseUrl}/${args.path}`;\n    let sha = null;\n    try {\n      const existing = await githubRequest(url, \"GET\");\n      if (existing && existing.sha) {\n        sha = existing.sha;\n      }\n    } catch(e) {\n      // File does not exist yet\n    }\n    \n    const body = {\n      message: args.commitMessage || `Update ${args.path} via AI Coding Agent`,\n      content: Buffer.from(args.content).toString(\"base64\")\n    };\n    if (sha) {\n      body.sha = sha;\n    }\n    \n    const data = await githubRequest(url, \"PUT\", body);\n    return `Successfully wrote file ${args.path}. Commit SHA: ${data.commit.sha}`;\n  } \n  \n  else if (args.action === \"list\") {\n    const url = `${baseUrl}/${args.path || \"\"}`;\n    const data = await githubRequest(url, \"GET\");\n    if (Array.isArray(data)) {\n      const items = data.map(item => `${item.type === \"dir\" ? \"[DIR]\" : \"[FILE]\"} ${item.path}`).join(\"\\n\");\n      return items || \"Directory is empty\";\n    } else {\n      return `Error: Path is not a directory.`;\n    }\n  } \n  \n  else {\n    return `Unknown action: ${args.action}. Supported actions: read, write, list.`;\n  }\n} catch (error) {\n  return `Error executing github_actions tool: ${error.message}`;\n}"
+      },
+      "id": "custom-tool-id",
+      "name": "GitHub Actions Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCustom",
+      "typeVersion": 1,
+      "position": [
+        650,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "id": "webhook-response-id",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        780,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Coding Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Coding Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Window Buffer Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Coding Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitHub Actions Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Coding Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Coding Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionTimeout": 3600
+  }
+}

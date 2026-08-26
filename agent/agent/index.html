@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DevAgent.ai - Autonomous Coding Companion</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Prism.js (Syntax Highlighting) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <svg class="logo-icon" viewBox="0 0 24 24" width="24" height="24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="logo-text">DevAgent<span class="logo-dot">.ai</span></span>
+        </div>
+        <button class="mobile-close-btn" id="mobile-close-btn" aria-label="Close Sidebar">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="sidebar-actions">
+        <button class="btn btn-primary btn-new-chat" id="new-chat-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          <span>New Chat</span>
+        </button>
+      </div>
+
+      <!-- Conversations History -->
+      <div class="sidebar-section">
+        <h3 class="section-title">History</h3>
+        <div class="conversations-list" id="conversations-list">
+          <div class="empty-history">No past conversations</div>
+        </div>
+      </div>
+
+      <!-- GitHub Status Panel -->
+      <div class="sidebar-section github-panel">
+        <div class="section-header-row">
+          <h3 class="section-title">GitHub Status</h3>
+          <span class="status-badge" id="github-status-badge">
+            <span class="pulse-dot"></span><span id="github-status-text">Checking…</span>
+          </span>
+        </div>
+        <div class="github-details">
+          <div class="detail-item">
+            <span class="detail-label">Owner</span>
+            <span class="detail-value" id="github-owner">—</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Repository</span>
+            <span class="detail-value" id="github-repo">—</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">AI Model</span>
+            <span class="detail-value" id="ai-model-label">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="sidebar-footer">
+        <button class="btn btn-danger-outline btn-icon-label" id="clear-chat-btn">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+          <span>Clear Conversations</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Chat Area -->
+    <main class="chat-container">
+      
+      <!-- Chat Header -->
+      <header class="chat-header">
+        <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Open Sidebar">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+        </button>
+        <div class="active-agent-status">
+          <div class="status-indicator idle" id="agent-pulse"></div>
+          <span class="status-text" id="agent-status-label">Agent: Idle</span>
+        </div>
+        <div class="header-actions">
+          <a href="https://github.com/vijaykadiyala77-hue/n8n-coding-agent" target="_blank" class="github-link-btn" title="View Repository" id="github-repo-link">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          </a>
+        </div>
+      </header>
+
+      <!-- Config Warning Banner (shown when backend is not reachable) -->
+      <div class="webhook-banner hidden" id="webhook-banner">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" class="banner-icon"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01"/></svg>
+        <span class="banner-text" id="banner-text">Backend is not reachable. Start the FastAPI server.</span>
+      </div>
+
+      <!-- Messages Window -->
+      <div class="messages-area" id="messages-area">
+        <!-- Welcome Message -->
+        <div class="welcome-container" id="welcome-container">
+          <div class="welcome-header">
+            <h1>What can I help you with today?</h1>
+            <p>I'm your AI assistant — ask me anything in English, Telugu, Tenglish, or Hinglish. I can also write code and commit it to <code id="repo-display">vijaykadiyala77-hue/n8n-coding-agent</code>.</p>
+          </div>
+          
+          <div class="suggested-prompts-grid">
+            <button class="suggested-prompt-card" data-prompt="Explain how async/await works in Python with examples.">
+              <h3>💡 Explain a Concept</h3>
+              <p>"Explain how async/await works in Python with examples."</p>
+            </button>
+            <button class="suggested-prompt-card" data-prompt="Create a Python calculator with basic arithmetic operations.">
+              <h3>🛠️ Build Code</h3>
+              <p>"Create a Python calculator with basic arithmetic operations."</p>
+            </button>
+            <button class="suggested-prompt-card" data-prompt="Write a professional email to request a project deadline extension.">
+              <h3>✍️ Write Text</h3>
+              <p>"Write a professional email to request a project deadline extension."</p>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress Indicator -->
+      <div class="progress-simulator-container hidden" id="progress-container">
+        <div class="progress-card">
+          <div class="spinner-spinner"></div>
+          <h4 id="progress-header">Agent is working...</h4>
+          <div class="progress-steps" id="progress-steps">
+            <div class="step-row" id="step-0"><span class="step-dot active"></span><span>Analyzing request & scope...</span></div>
+            <div class="step-row" id="step-1"><span class="step-dot"></span><span>Inspecting repository...</span></div>
+            <div class="step-row" id="step-2"><span class="step-dot"></span><span>Generating code with AI...</span></div>
+            <div class="step-row" id="step-3"><span class="step-dot"></span><span>Preparing response...</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Dialog (shown before committing to GitHub) -->
+      <div class="modal-backdrop hidden" id="confirm-modal">
+        <div class="modal">
+          <div class="modal-header">
+            <h3 id="confirm-modal-title">Confirm GitHub Action</h3>
+            <button class="modal-close" id="confirm-modal-close">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="settings-helper-text" id="confirm-modal-desc">Review the pending action before committing to GitHub.</p>
+            <div class="form-group">
+              <label>File Path</label>
+              <input type="text" class="form-control" id="confirm-file-path" readonly>
+            </div>
+            <div class="form-group">
+              <label>Commit Message</label>
+              <input type="text" class="form-control" id="confirm-commit-msg">
+            </div>
+            <div class="security-notice">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" class="notice-icon"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <p>This will commit and push the change to your GitHub repository using your server-side credentials.</p>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" id="confirm-cancel-btn">Cancel</button>
+            <button class="btn btn-primary" id="confirm-commit-btn">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              Confirm & Commit
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Section -->
+      <footer class="input-panel">
+        <div class="input-container">
+          <textarea 
+            class="chat-textarea" 
+            id="chat-textarea" 
+            placeholder="Ask me anything... (English, Telugu, Tenglish, Hinglish)" 
+            rows="1"></textarea>
+          
+          <div class="controls-row">
+            <div class="cancel-container">
+              <button class="btn btn-secondary-outline btn-stop hidden" id="stop-btn">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                <span>Stop Request</span>
+              </button>
+            </div>
+            
+            <button class="btn btn-primary btn-send" id="send-btn" disabled>
+              <span>Send</span>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+            </button>
+          </div>
+        </div>
+      </footer>
+    </main>
+
+    <!-- Notification Toast -->
+    <div class="toast-container" id="toast-container"></div>
+
+  </div>
+
+  <!-- PrismJS (Syntax Highlighting) scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  
+  <!-- App JS -->
+  <script src="script.js"></script>
+</body>
+</html>
