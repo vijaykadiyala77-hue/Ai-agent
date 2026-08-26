@@ -4,6 +4,12 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ── Backend Config ───────────────────────────────────────────────────────
+  // Set this to your deployed FastAPI backend URL, e.g.
+  // 'https://devagent-backend.onrender.com'
+  // Leave as '' only if the backend is served from the SAME domain as this frontend.
+  const API_BASE = 'https://YOUR-BACKEND-URL.onrender.com';
+
   // ── State ────────────────────────────────────────────────────────────────
   let conversations       = [];
   let activeConversationId = null;
@@ -75,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function checkBackendStatus() {
     try {
-      const res = await fetch('/api/status');
+      const res = await fetch(`${API_BASE}/api/status`);
       if (!res.ok) throw new Error('not ok');
       const data = await res.json();
 
@@ -282,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
     startProgressSimulation();
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch(`${API_BASE}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: rawMessage, history }),
@@ -375,7 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     try {
-      const res = await fetch('/api/confirm', {
+      const res = await fetch(`${API_BASE}/api/confirm`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
